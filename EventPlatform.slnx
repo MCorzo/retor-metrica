@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/common/">
+    <Project Path="contracts/EventPlatform.Contracts/EventPlatform.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/services/" />
+  <Folder Name="/services/event-service/" />
+  <Folder Name="/services/event-service/src/">
+    <Project Path="services/event-service/src/EventService.Api/EventService.Api.csproj" />
+    <Project Path="services/event-service/src/EventService.Application/EventService.Application.csproj" />
+    <Project Path="services/event-service/src/EventService.Domain/EventService.Domain.csproj" />
+    <Project Path="services/event-service/src/EventService.Infrastructure/EventService.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/services/notification-service/" />
+  <Folder Name="/services/notification-service/src/">
+    <Project Path="services/notification-service/src/NotificationService.Api/NotificationService.Api.csproj" />
+    <Project Path="services/notification-service/src/NotificationService.Application/NotificationService.Application.csproj" />
+    <Project Path="services/notification-service/src/NotificationService.Domain/NotificationService.Domain.csproj" />
+    <Project Path="services/notification-service/src/NotificationService.Infrastructure/NotificationService.Infrastructure.csproj" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+</Solution>

@@ -1,0 +1,13 @@
+services:
+  eventservice.api:
+    environment:
+      - aspnetcore_environment=development
+      - aspnetcore_http_ports=8080
+    ports:
+      - "8080"
+  notificationservice.api:
+    environment:
+      - aspnetcore_environment=development
+      - aspnetcore_http_ports=8080
+    ports:
+      - "8080"

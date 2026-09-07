@@ -1,0 +1,12 @@
+**/bin
+**/obj
+.git
+.gitignore
+.github
+.vs
+.vscode
+.idea
+*.md
+docker/.env
+**/appsettings.Development.json
+**/.env

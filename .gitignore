@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+TestResults/
+*.trx
+artifacts/
+
+# Visual Studio
+.vs/
+.vscode/
+.idea/
+
+# Secrets - never commit
+.env
+docker/.env
+appsettings.*.Local.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/

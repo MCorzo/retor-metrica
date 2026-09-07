@@ -1,0 +1,128 @@
+services:
+  postgres-events:
+    image: postgres:17-alpine
+    container_name: event-platform-postgres-events
+    environment:
+      - POSTGRES_DB=${POSTGRES_EVENTS_DB:-events}
+      - POSTGRES_USER=${POSTGRES_EVENTS_USER:-events}
+      - POSTGRES_PASSWORD=${POSTGRES_EVENTS_PASSWORD:-events}
+    volumes:
+      - events-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_EVENTS_USER:-events} -d ${POSTGRES_EVENTS_DB:-events}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  postgres-notifications:
+    image: postgres:17-alpine
+    container_name: event-platform-postgres-notifications
+    environment:
+      - POSTGRES_DB=${POSTGRES_NOTIFICATIONS_DB:-notifications}
+      - POSTGRES_USER=${POSTGRES_NOTIFICATIONS_USER:-notifications}
+      - POSTGRES_PASSWORD=${POSTGRES_NOTIFICATIONS_PASSWORD:-notifications}
+    volumes:
+      - notifications-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_NOTIFICATIONS_USER:-notifications} -d ${POSTGRES_NOTIFICATIONS_DB:-notifications}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: event-platform-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # open source tool to simulate smtp server for development purposes
+  # more info: https://github.com/mailhog/mailhog
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: event-platform-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: event-platform-keycloak
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        # The master realm cannot be imported with --import-realm alone (Keycloak
+        # skips realms that already exist at startup), so override it explicitly
+        # first, then start as usual. Source: keycloak/keycloak#32689.
+        /opt/keycloak/bin/kc.sh import --file=/opt/keycloak/data/import/master-realm-export.json --override=true
+        /opt/keycloak/bin/kc.sh start-dev --import-realm
+    volumes:
+      - ./assets:/opt/keycloak/data/import:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  eventservice.api:
+    build:
+      context: .
+      dockerfile: services/event-service/src/EventService.Api/Dockerfile
+    environment:
+      - Aws__AccessKey=${AWS_ACCESS_KEY_ID}
+      - Aws__SecretKey=${AWS_SECRET_ACCESS_KEY}
+      - Aws__Region=${AWS_REGION:-us-east-1}
+      - Sns__TopicName=${SNS_TOPIC_NAME:-event-created}
+      - CloudWatch__Enabled=true
+      - CloudWatch__LogGroup=event-platform/EventService
+      - ConnectionStrings__Default=Host=postgres-events;Port=5432;Database=${POSTGRES_EVENTS_DB:-events};Username=${POSTGRES_EVENTS_USER:-events};Password=${POSTGRES_EVENTS_PASSWORD:-events}
+      - Redis__Connection=redis:6379
+      - Oidc__Issuer=http://localhost:8080/realms/master
+      - Oidc__Audience=master-realm
+    ports:
+      - "1080:8080"
+    depends_on:
+      postgres-events:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  notificationservice.api:
+    build:
+      context: .
+      dockerfile: services/notification-service/src/NotificationService.Api/Dockerfile
+    environment:
+      - Aws__AccessKey=${AWS_ACCESS_KEY_ID}
+      - Aws__SecretKey=${AWS_SECRET_ACCESS_KEY}
+      - Aws__Region=${AWS_REGION:-us-east-1}
+      - Sns__TopicName=${SNS_TOPIC_NAME:-event-created}
+      - Sns__QueueName=${SNS_QUEUE_NAME:-notification-service-event-created}
+      - CloudWatch__Enabled=true
+      - CloudWatch__LogGroup=event-platform/NotificationService
+      - ConnectionStrings__Default=Host=postgres-notifications;Port=5432;Database=${POSTGRES_NOTIFICATIONS_DB:-notifications};Username=${POSTGRES_NOTIFICATIONS_USER:-notifications};Password=${POSTGRES_NOTIFICATIONS_PASSWORD:-notifications}
+      - Smtp__Host=mailhog
+      - Smtp__Port=1025
+      - Oidc__Issuer=http://localhost:8080/realms/master
+      - Oidc__Audience=master-realm
+    ports:
+      - "1081:8080"
+    depends_on:
+      postgres-notifications:
+        condition: service_healthy
+
+volumes:
+  events-pgdata:
+  notifications-pgdata:
