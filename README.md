@@ -1,61 +1,51 @@
 # Event Platform MVP
 
-Online events platform MVP built as **two independently deployable .NET 10
-microservices**:
+El MVP realizado esta trabajado 
+
+Los servicios desarrollados son los siguientes:
 
 - **EventService** — RESTful API to create events with zones (atomic
   transaction), list events with role-based visibility served from a fast
   Redis cache, and retrieve event detail. On creation it reliably publishes an
   `EventCreated` event to AWS SNS through a transactional outbox + relay.
+
 - **NotificationService** — consumes `EventCreated` from a subscribed AWS SQS
   queue, persists a durable notification record, and sends a single simple-text
   email to the Admin via MailKit (MailHog in dev). Exactly-once dedup by
   correlation id; SMTP failures are recorded and retried.
 
-Documentation for the feature lives in
-[`specs/001-event-platform-mvp/`](specs/001-event-platform-mvp/) (`quickstart.md`,
-`spec.md`, `plan.md`, `tasks.md`, `data-model.md`, `contracts/`).
-
-The AWS SNS/SQS/CloudWatch migration is documented in
-[`specs/002-aws-sns-migration/`](specs/002-aws-sns-migration/)
-(`plan.md`, `spec.md`, `tasks.md`, `data-model.md`, `contracts/aws-environment-variables.md`,
-`quickstart.md`).
-
-## Architecture
+## Arquitectura
 
 ```text
 services/
-├── event-service/          # Create/list/detail events + publish EventCreated
+├── event-service/          # CRUD eventos + publicació EventCreated
 │   └── src/
-│       ├── EventService.Domain/          # Entities, value objects, rules
+│       ├── EventService.Domain/          # Entidades, reglas
 │       ├── EventService.Application/     # MediatR handlers, validators, DTOs
-│       ├── EventService.Infrastructure/  # EF Core, outbox, Redis, SNS publish
-│       └── EventService.Api/             # REST endpoints, auth, rate limiting, health, Scalar
+│       ├── EventService.Infrastructure/  # EF Core, Redis, SNS publish
+│       └── EventService.Api/             # REST endpoints, Scalar
 ├── notification-service/   # Consume EventCreated → record + email
 │   └── src/
-│       ├── NotificationService.Domain/   # NotificationRecord entity
+│       ├── NotificationService.Domain/   # Entidades
 │       ├── NotificationService.Application/
 │       ├── NotificationService.Infrastructure/  # EF Core, SQS consumer, MailKit
 │       └── NotificationService.Api/      # Health, notifications query, Scalar
-├── contracts/              # Shared event contracts (EventPlatform.Contracts)
-└── docker/                 # docker-compose dev stack (postgres, redis, mailhog, keycloak)
+└── common/              # Shared event contracts (EventPlatform.Contracts)
 ```
 
-Core conventions (constitution v2.0.0): UUIDv7 identifiers, mandatory audit
-fields on every record, EF Core-only PostgreSQL access, OIDC JWT authN/Z with
-resource-ownership enforcement, Polly-based resilience, Serilog → CloudWatch,
-Scalar docs, health checks, and rate limiting per API. **No automated tests** —
-correctness is verified through the manual smoke checks in `quickstart.md`.
 
-## Prerequisites
+## Pre Requisitos
 
-- .NET 10 SDK (SDK version pinned in `global.json`)
-- Docker (for the backend stack and local verification)
+- Visual Studio 2026
+- .NET 10 SDK
+- Docker
+
+> **Nota**: Si bien el proyecto fue desarrollado con Visual Studio 2026 Comunnity se entrega con los archivos necesarios (dockerfiles y docker-compose.yml) para poder levantar el proyecto utilizando unicamente la mediante consola.
 
 ## Start the backend stack
 
 ```powershell
-Copy-Item .env.example .env   # first run only, fill in AWS credentials
+Copy-Item .env.example .env
 docker compose up -d --build
 ```
 

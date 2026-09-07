@@ -1,0 +1,37 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="mHHZcqsN7IxMzSB1q7We">
+    <mxGraphModel dx="2804" dy="1126" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;fontSize=14;fontStyle=1" value="OnPremis Services" vertex="1">
+          <mxGeometry height="410" width="620" x="-425" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;fontSize=14;fontStyle=1" value="Cloud Services" vertex="1">
+          <mxGeometry height="410" width="620" x="-425" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-2" parent="1" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/assets/infrastructure/1/SMTP_Server.svg;" value="" vertex="1">
+          <mxGeometry height="65.4" width="55.12" x="70" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-10" connectable="0" parent="1" style="group;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="65.39999999999998" width="65" x="-710" y="524.6" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-9" parent="lsG4_6SOtdUp5xwVJaPK-10" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/general/Browser.svg;labelPosition=center;verticalLabelPosition=top;verticalAlign=bottom;" value="&lt;b&gt;User&lt;/b&gt;" vertex="1">
+          <mxGeometry height="52" width="65" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-3" parent="lsG4_6SOtdUp5xwVJaPK-10" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#0080F0;shadow=0;dashed=0;shape=mxgraph.ios7.icons.user;fillColor=default;" value="" vertex="1">
+          <mxGeometry height="35.403333333333336" width="35.4" x="29.599999999999966" y="29.99666666666667" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-14" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="74.31" width="59" x="50" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-5" parent="lsG4_6SOtdUp5xwVJaPK-14" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;" value="" vertex="1">
+          <mxGeometry height="64" width="48" as="geometry" />
+        </mxCell>
+        <mxCell id="lsG4_6SOtdUp5xwVJaPK-4" parent="lsG4_6SOtdUp5xwVJaPK-14" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/assets/developer/1/Docker_Tools.svg" value="" vertex="1">
+          <mxGeometry height="24.31" width="29" x="30" y="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
