@@ -8,13 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EventService.Infrastructure.Messaging;
 
-/// <summary>
-/// Background relay (US1, FR-006): polls due <c>Pending</c> outbox rows every
-/// ~10 s, claims each row with an atomic lease the same instance cannot
-/// re-process, publishes the raw payload to SNS, and marks it <c>Published</c>.
-/// Failures are recorded with backoff and retried. A crashed relay is taken
-/// over by the lease expiring (<c>next_try_at</c>), so no message is lost.
-/// </summary>
 public sealed class OutboxRelay(
     IServiceScopeFactory scopeFactory,
     IAmazonSimpleNotificationService sns,
@@ -87,11 +80,6 @@ public sealed class OutboxRelay(
         }
     }
 
-    /// <summary>
-    /// Race-safe claim without a lock table: pushes <c>next_try_at</c> forward
-    /// (lease) only if the row is still <c>Pending</c> and unchanged since read.
-    /// Returns false when another process already owns the row.
-    /// </summary>
     private static async Task<bool> TryClaimAsync(EventDbContext db, Guid id, DateTimeOffset previousNextTryAt, CancellationToken ct)
     {
         var claimed = await db.OutboxMessages

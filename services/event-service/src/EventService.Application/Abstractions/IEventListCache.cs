@@ -2,10 +2,6 @@ using EventService.Application.Dtos;
 
 namespace EventService.Application.Abstractions;
 
-/// <summary>
-/// Role-aware cache-aside store for event list projections (FR-007).
-/// Cache is never a source of truth — the DB is authoritative.
-/// </summary>
 public interface IEventListCache
 {
     Task<EventListItemDto[]?> GetAsync(string key, CancellationToken ct);
@@ -15,7 +11,6 @@ public interface IEventListCache
     Task InvalidateAsync(IEnumerable<string> keys, CancellationToken ct);
 }
 
-/// <summary>Versioned, role-aware Redis key composition (data-model.md / research.md).</summary>
 public static class EventListCacheKeys
 {
     public const string VersionPrefix = "events:v1";

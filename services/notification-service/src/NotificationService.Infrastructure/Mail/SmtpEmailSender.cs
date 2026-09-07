@@ -7,11 +7,6 @@ using NotificationService.Domain.Entities;
 
 namespace NotificationService.Infrastructure.Mail;
 
-/// <summary>
-/// Sends a single simple-text email via MailKit through a Polly retry pipeline.
-/// Transient failures (4xx/protocol/timeout) are retried; permanent 5xx
-/// rejections bubble up so the scanner can mark the record Failed.
-/// </summary>
 public sealed class SmtpEmailSender(
     SmtpOptions options,
     EventEmailBuilder emailBuilder,
@@ -52,7 +47,6 @@ public sealed class SmtpEmailSender(
     }
 }
 
-/// <summary>Classifies SMTP failures as transient (retry) vs permanent (mark Failed).</summary>
 public static class EmailFailureClassifier
 {
     public static bool IsPermanent(Exception ex)

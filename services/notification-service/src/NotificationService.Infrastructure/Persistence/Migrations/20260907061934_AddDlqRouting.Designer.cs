@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NotificationService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(NotificationDbContext))]
-    [Migration("20260906201951_DropMassTransitTables")]
-    partial class DropMassTransitTables
+    [Migration("20260907061934_AddDlqRouting")]
+    partial class AddDlqRouting
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,6 +50,15 @@ namespace NotificationService.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_record_edit");
 
+                    b.Property<string>("DlqMessageId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("dlq_message_id");
+
+                    b.Property<DateTimeOffset?>("DlqRoutedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dlq_routed_at");
+
                     b.Property<DateTimeOffset>("EventDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("event_date");
@@ -82,6 +91,10 @@ namespace NotificationService.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("NextTryAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_try_at");
+
+                    b.Property<string>("OriginalMessageJson")
+                        .HasColumnType("text")
+                        .HasColumnName("original_message_json");
 
                     b.Property<string>("PayloadHash")
                         .IsRequired()

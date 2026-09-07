@@ -123,6 +123,8 @@ dotnet format EventPlatform.slnx  # enforced formatting
 | `Redis:Connection` | `localhost:6379` | Cache |
 | `Sns:TopicName` | `event-created` | SNS topic auto-created at startup |
 | `Sns:QueueName` | `notification-service-event-created` | SQS queue auto-created + subscribed (NotificationService) |
+| `Sns:DlqName` | `notification-service-event-created-dlq` | SQS DLQ for terminal email failures, auto-provisioned with 14-day retention |
+| `Email:MaxTransientAttempts` | `5` | Transient SMTP retry cap before a notification is routed to the DLQ |
 | `Aws:Region` | `us-east-1` | AWS region (SNS/SQS/CloudWatch) |
 | `Aws:AccessKey` / `Aws:SecretKey` | empty | AWS static credentials (from env, never committed) |
 | `CloudWatch:Enabled` | `false` (appsettings) → `true` (compose) | Ship structured logs to AWS CloudWatch (30-day retention) |

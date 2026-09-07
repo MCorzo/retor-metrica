@@ -33,7 +33,7 @@ public static class DependencyInjection
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
 
-        // Startup schema migration + one-shot reference seed (feature 003).
+        // Startup schema migration.
         var seed = configuration.GetSection(SeedPathOptions.SectionName).Get<SeedPathOptions>()
             ?? new SeedPathOptions();
         services.AddSingleton(seed);
@@ -41,13 +41,15 @@ public static class DependencyInjection
 
         var smtp = configuration.GetSection("Smtp").Get<SmtpOptions>() ?? new SmtpOptions();
         services.AddSingleton(smtp);
+        var email = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
+        services.AddSingleton(email);
         services.AddSingleton<IAuditEmailTarget>(new AdminEmailTarget(
             configuration["Email:AdminAddress"] ?? "admin@event-platform.local"));
         services.AddScoped<EventEmailBuilder>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddHostedService<EmailScanner>();
 
-        // Direct AWS SNS/SQS messaging (US1).
+        // Direct AWS SNS/SQS messaging.
         var messaging = configuration.GetSection(AwsMessagingOptions.SectionName)
             .Get<AwsMessagingOptions>() ?? new AwsMessagingOptions();
         var aws = configuration.GetSection(AwsCredentialsOptions.SectionName)
@@ -57,6 +59,7 @@ public static class DependencyInjection
         services.AddSingleton(AwsClients.CreateSns(aws));
         services.AddSingleton(AwsClients.CreateSqs(aws));
         services.AddSingleton<AwsBrokerState>();
+        services.AddSingleton<DeadLetterRelay>();
         services.AddScoped<EventCreatedProcessor>();
         services.AddHostedService<BrokerProvisioner>();
         services.AddHostedService<SqsConsumerHostedService>();

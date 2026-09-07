@@ -3,7 +3,6 @@ using NotificationService.Domain.Entities;
 
 namespace NotificationService.Infrastructure.Persistence;
 
-/// <summary>NotificationService store — schema <c>notifications</c>. Data access via EF Core only (constitution).</summary>
 public sealed class NotificationDbContext(DbContextOptions<NotificationDbContext> options) : DbContext(options)
 {
     public DbSet<NotificationRecord> NotificationRecords => Set<NotificationRecord>();

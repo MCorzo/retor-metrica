@@ -3,12 +3,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace EventService.Api.Health;
-
-/// <summary>
-/// Sanitized readiness writer: reports overall + per-dependency status only.
-/// Never exposes connection strings, addresses, or exception details
-/// (constitution Health Checks section).
-/// </summary>
 public static class ReadyResponseWriter
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

@@ -6,12 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EventService.Infrastructure.Messaging;
 
-/// <summary>
-/// Idempotently ensures the <c>event-created</c> SNS topic exists at startup and
-/// caches its ARN (US1). The generic host starts hosted services sequentially
-/// and this one is registered before Kestrel binds, so request handlers and the
-/// outbox relay always see a resolved ARN.
-/// </summary>
 public sealed class BrokerProvisioner(
     IAmazonSimpleNotificationService sns,
     AwsMessagingOptions options,

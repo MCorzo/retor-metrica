@@ -4,7 +4,6 @@ using Event = EventService.Domain.Entities.Event;
 
 namespace EventService.Infrastructure.Persistence;
 
-/// <summary>EventService store — schema <c>events</c>. Data access via EF Core only (constitution).</summary>
 public sealed class EventDbContext(DbContextOptions<EventDbContext> options) : DbContext(options)
 {
     public DbSet<Event> Events => Set<Event>();

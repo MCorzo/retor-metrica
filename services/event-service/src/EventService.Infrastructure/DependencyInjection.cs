@@ -38,13 +38,13 @@ public static class DependencyInjection
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventListCache, EventListCache>();
 
-        // Startup schema migration + one-shot reference seed (feature 003).
+        // Startup schema migration.
         var seed = configuration.GetSection(SeedPathOptions.SectionName).Get<SeedPathOptions>()
             ?? new SeedPathOptions();
         services.AddSingleton(seed);
         services.AddScoped<EventDatabaseSeeder>();
 
-        // Direct AWS SNS/SQS messaging (US1).
+        // Direct AWS SNS/SQS messaging.
         var messaging = configuration.GetSection(AwsMessagingOptions.SectionName)
             .Get<AwsMessagingOptions>() ?? new AwsMessagingOptions();
         var aws = configuration.GetSection(AwsCredentialsOptions.SectionName)

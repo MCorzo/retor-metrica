@@ -3,7 +3,6 @@ using MediatR;
 
 namespace EventService.Application.Behaviors;
 
-/// <summary>Validates every request through FluentValidation before the handler runs.</summary>
 public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {

@@ -9,10 +9,6 @@ public static class ClaimsPrincipalExtensions
         user.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? user.FindFirstValue("sub");
 
-    /// <summary>
-    /// Role claims may arrive as <c>role</c> / <c>roles</c> / Keycloak
-    /// <c>realm_access.roles</c>. Fold all of them into a single set.
-    /// </summary>
     public static HashSet<string> RolesOf(this ClaimsPrincipal user)
     {
         var roles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

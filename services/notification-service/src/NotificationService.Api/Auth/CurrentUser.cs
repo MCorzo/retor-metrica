@@ -2,7 +2,6 @@ using NotificationService.Application.Abstractions;
 
 namespace NotificationService.Api.Auth;
 
-/// <summary>Resolves the authenticated actor for audit fields.</summary>
 public sealed class CurrentUser(IHttpContextAccessor httpContextAccessor) : IAuditUserProvider
 {
     public Guid? SubjectId

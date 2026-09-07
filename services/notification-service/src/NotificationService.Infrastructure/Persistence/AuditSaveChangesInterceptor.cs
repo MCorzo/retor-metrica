@@ -6,10 +6,6 @@ using NotificationService.Domain.Entities;
 
 namespace NotificationService.Infrastructure.Persistence;
 
-/// <summary>
-/// Automatically maintains the mandatory audit fields (constitution v1.8.0)
-/// on every insert/update. Service actors resolve to <see cref="Guid.Empty"/>.
-/// </summary>
 public sealed class AuditSaveChangesInterceptor(IAuditUserProvider auditUser) : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -77,8 +73,10 @@ public sealed class NotificationRecordConfiguration : IEntityTypeConfiguration<N
         b.Property(r => r.LastError).HasMaxLength(500);
         b.Property(r => r.SmtpMessageId).HasMaxLength(200);
         b.Property(r => r.ZoneDetailsJson).HasColumnType("text");
+        b.Property(r => r.OriginalMessageJson).HasColumnType("text");
+        b.Property(r => r.DlqMessageId).HasMaxLength(128);
+        b.Property(r => r.DlqRoutedAt);
 
-        // Exactly-once dedup key (FR-014 / SC-003)
         b.HasIndex(r => r.CorrelationId)
             .IsUnique()
             .HasDatabaseName("UX_notification_records_correlation_id");

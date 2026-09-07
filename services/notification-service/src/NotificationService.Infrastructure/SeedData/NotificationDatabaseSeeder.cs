@@ -4,13 +4,6 @@ using NotificationService.Infrastructure.Persistence;
 
 namespace NotificationService.Infrastructure.SeedData;
 
-/// <summary>
-/// Startup seeder for the <c>notifications</c> schema. Runs EF <c>Migrate()</c>,
-/// then — only when the <c>notifications.seeds_applied</c> marker is absent —
-/// executes the versioned <c>*.sql</c> files in <see cref="SeedPathOptions.Path"/>
-/// in lexical order and records the marker. Both layers (marker + <c>ON CONFLICT</c>
-/// in the scripts) make the pass idempotent; operator data is never overwritten.
-/// </summary>
 public sealed class NotificationDatabaseSeeder
 {
     private const string MarkerTableSql =

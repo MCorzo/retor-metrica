@@ -4,10 +4,6 @@ using NotificationService.Domain.Entities;
 
 namespace NotificationService.Infrastructure.Mail;
 
-/// <summary>
-/// Builds the single simple-text email to the Admin with a summary of the
-/// created event (name, date, venue, zone details) — FR-015.
-/// </summary>
 public sealed class EventEmailBuilder(SmtpOptions options)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

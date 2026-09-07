@@ -47,10 +47,17 @@ public sealed class NotificationRecord : AuditableEntity
     public string? LastError { get; private set; }
     public string? SmtpMessageId { get; private set; }
 
-    /// <summary>JSON snapshot of the message zones (name/price/capacity) so the email summary survives schema change (FR-015 / SC-005).</summary>
     public string? ZoneDetailsJson { get; private set; }
 
     public void SetZoneDetailsJson(string json) => ZoneDetailsJson = json;
+
+    public string? OriginalMessageJson { get; private set; }
+
+    public string? DlqMessageId { get; private set; }
+
+    public DateTimeOffset? DlqRoutedAt { get; private set; }
+
+    public void SetOriginalMessageJson(string json) => OriginalMessageJson = json;
 
     public void MarkSent(string smtpMessageId)
     {
@@ -68,11 +75,33 @@ public sealed class NotificationRecord : AuditableEntity
         NextTryAt = DateTimeOffset.UtcNow.Add(retryIn);
     }
 
-    /// <summary>
-    /// Transient send failure (connection/protocol/timeout/4xx): the record stays
-    /// <c>Pending</c> and gets re-scanned after <paramref name="retryIn"/>. Each
-    /// attempt bumps <c>attempt_count</c> (data-model.md: "email send attempts").
-    /// </summary>
+    public void MarkTerminal(string sanitizedReason)
+    {
+        AttemptCount += 1;
+        LastError = sanitizedReason;
+        Status = NotificationStatus.Failed;
+        NextTryAt = DateTimeOffset.UtcNow;
+    }
+
+    public void MarkDlqRouted(string dlqMessageId)
+    {
+        DlqMessageId = dlqMessageId;
+        DlqRoutedAt = DateTimeOffset.UtcNow;
+        NextTryAt = null;
+    }
+
+    public void MarkDlqRoutePending(TimeSpan retryIn)
+    {
+        NextTryAt = DateTimeOffset.UtcNow.Add(retryIn);
+    }
+
+    public void RequeueForReplay()
+    {
+        Status = NotificationStatus.Pending;
+        AttemptCount = 0;
+        NextTryAt = DateTimeOffset.UtcNow;
+    }
+
     public void RecordTransientFailure(string sanitizedReason, TimeSpan retryIn)
     {
         AttemptCount += 1;

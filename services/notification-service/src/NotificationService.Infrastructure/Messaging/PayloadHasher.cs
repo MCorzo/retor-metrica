@@ -4,11 +4,6 @@ using System.Text.Json;
 
 namespace NotificationService.Infrastructure.Messaging;
 
-/// <summary>
-/// Recomputes the SHA-256 integrity marker of the consumed payload
-/// (FR-012 / data-model.md). The digest is computed over the canonical
-/// camelCase JSON serialization of the message.
-/// </summary>
 public static class PayloadHasher
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

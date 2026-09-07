@@ -43,7 +43,6 @@ public sealed class CreateEventCommandHandler(
             CreatedAt = now,
         }, ct);
 
-        // Single transaction: event + zones + outbox row commit atomically (FR-001/FR-002/FR-005/FR-006).
         await repository.SaveChangesAsync(ct);
 
         await InvalidateCachesAsync(@event, ct);
@@ -54,12 +53,6 @@ public sealed class CreateEventCommandHandler(
         return new CreateEventCommandResult(@event.Id);
     }
 
-    /// <summary>
-    /// Delete-on-invalidate (FR-007): a freshly created event must appear on the
-    /// next read. Fail-open — a stale cache row self-expires via TTL and the DB
-    /// remains authoritative, so invalidation errors never fail the request
-    /// that already committed.
-    /// </summary>
     private async Task InvalidateCachesAsync(Event @event, CancellationToken ct)
     {
         var keys = new List<string>

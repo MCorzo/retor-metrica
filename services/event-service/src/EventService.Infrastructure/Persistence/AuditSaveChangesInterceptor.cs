@@ -5,11 +5,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace EventService.Infrastructure.Persistence;
 
-/// <summary>
-/// Automatically maintains the mandatory audit fields (constitution v1.8.0)
-/// on every insert/update. Creation fields are set once; edit fields mirror
-/// creation on insert and are overwritten on every update.
-/// </summary>
 public sealed class AuditSaveChangesInterceptor(IAuditUserProvider auditUser) : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(

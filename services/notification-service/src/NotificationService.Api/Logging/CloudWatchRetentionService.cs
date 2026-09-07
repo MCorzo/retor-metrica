@@ -5,11 +5,6 @@ using Amazon.Runtime;
 
 namespace NotificationService.Api.Logging;
 
-/// <summary>
-/// Startup task (US2): after the Serilog sink created the group, apply the
-/// explicit 30-day retention policy via <c>PutRetentionPolicyAsync</c>. No-op
-/// when <c>CloudWatch:Enabled</c> is false (local default).
-/// </summary>
 public sealed class CloudWatchRetentionService(
     IConfiguration configuration,
     ILogger<CloudWatchRetentionService> logger) : IHostedService
@@ -41,10 +36,6 @@ public sealed class CloudWatchRetentionService(
 
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
 
-    /// <summary>
-    /// Uses the same static credentials as the SNS/SQS clients whenever configured,
-    /// otherwise falls back to the default credential chain (provisioned role).
-    /// </summary>
     private AmazonCloudWatchLogsClient CreateClient(string region)
     {
         var accessKey = configuration["Aws:AccessKey"];

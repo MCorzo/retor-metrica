@@ -7,22 +7,15 @@ using NotificationService.Domain.Entities;
 
 namespace NotificationService.Infrastructure.Messaging;
 
-/// <summary>
-/// Applies an <c>EventCreated</c> message (previously <c>EventCreatedConsumer</c>):
-/// recomputes the payload hash, deduplicates by correlation id (exactly-once,
-/// FR-014/SC-003), and persists a durable <c>Pending</c> record for the email
-/// scanner. Invoked by <see cref="SqsConsumerHostedService"/> after deserializing
-/// the bare SNS payload.
-/// </summary>
 public sealed class EventCreatedProcessor(
     INotificationRepository repository,
     ILogger<EventCreatedProcessor> logger)
 {
-    public async Task HandleAsync(EventCreated message, CancellationToken ct)
+    public async Task HandleAsync(EventCreated message, string rawBody, CancellationToken ct)
     {
         var correlationId = message.CorrelationId;
 
-        // Correlate every consumer-side entry with the producer's id (US2).
+        // Correlate every consumer-side entry with the producer's id.
         using var scope = logger.BeginScope(new Dictionary<string, object>
         {
             ["CorrelationId"] = correlationId,
@@ -31,9 +24,23 @@ public sealed class EventCreatedProcessor(
         var existing = await repository.FindByCorrelationIdAsync(correlationId, ct);
         if (existing is not null)
         {
-            logger.LogInformation(
-                "Duplicate EventCreated skipped (correlation {CorrelationId}, existing {RecordId})",
-                correlationId, existing.Id);
+            if (existing.Status == NotificationStatus.Failed && existing.DlqRoutedAt is not null)
+            {
+                // Broker-tooling replay of the DLQ message:
+                // the archived correlation is re-opened for a fresh email cycle.
+                existing.RequeueForReplay();
+                await repository.SaveChangesAsync(ct);
+                logger.LogInformation(
+                    "Replay detected for previously failed record {RecordId} — re-queued for email retry (correlation {CorrelationId})",
+                    existing.Id, correlationId);
+            }
+            else
+            {
+                logger.LogInformation(
+                    "Duplicate EventCreated skipped (correlation {CorrelationId}, existing {RecordId}, status {Status})",
+                    correlationId, existing.Id, existing.Status);
+            }
+
             return;
         }
 
@@ -49,6 +56,7 @@ public sealed class EventCreatedProcessor(
             payloadHash: payloadHash);
 
         record.SetZoneDetailsJson(JsonSerializer.Serialize(message.Zones));
+        record.SetOriginalMessageJson(rawBody);
 
         await repository.AddAsync(record, ct);
         try

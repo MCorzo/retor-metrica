@@ -7,11 +7,6 @@ using StackExchange.Redis;
 
 namespace EventService.Infrastructure.Caching;
 
-/// <summary>
-/// Role-aware cache-aside implementation (FR-007). Cache stores frozen view
-/// projections only — the DB is always authoritative. On Redis failure, calls
-/// fall through to the DB via the repository (write-through never happens).
-/// </summary>
 public sealed class EventListCache(IConnectionMultiplexer redis) : IEventListCache
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

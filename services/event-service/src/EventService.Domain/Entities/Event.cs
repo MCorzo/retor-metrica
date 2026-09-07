@@ -40,10 +40,8 @@ public sealed class Event : AuditableEntity
     public DateTimeOffset Date { get; private set; }
     public string Venue { get; private set; } = string.Empty;
 
-    /// <summary><c>draft</c> | <c>published</c> — set at creation, no separate publish action in MVP.</summary>
     public string Status { get; private set; } = string.Empty;
 
-    /// <summary>IdP <c>sub</c> of the creating organizer/admin (resource ownership key).</summary>
     public Guid OwnerId { get; private set; }
 
     public IReadOnlyList<Zone> Zones => _zones;

@@ -27,6 +27,16 @@ public sealed class NotificationRepository(NotificationDbContext db) : INotifica
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<NotificationRecord>> GetUnroutedFailedAsync(int take, CancellationToken ct)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return await db.NotificationRecords
+            .Where(r => r.Status == NotificationStatus.Failed && r.DlqRoutedAt == null && r.NextTryAt <= now)
+            .OrderBy(r => r.NextTryAt)
+            .Take(take)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<NotificationRecord>> ListAsync(CancellationToken ct) =>
         await db.NotificationRecords
             .AsNoTracking()

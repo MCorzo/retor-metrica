@@ -1,6 +1,5 @@
 namespace NotificationService.Infrastructure.Mail;
 
-/// <summary>Binds the <c>Smtp</c> configuration section (dev: MailHog on 1025).</summary>
 public sealed class SmtpOptions
 {
     public string Host { get; set; } = "localhost";

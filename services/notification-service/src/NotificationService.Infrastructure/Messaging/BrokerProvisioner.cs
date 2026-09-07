@@ -9,13 +9,6 @@ using Microsoft.Extensions.Logging;
 
 namespace NotificationService.Infrastructure.Messaging;
 
-/// <summary>
-/// Idempotently provisions the SNS topic, the SQS queue, and the SNS→SQS
-/// subscription (protocol <c>sqs</c>, raw delivery) at startup (US1). The queue
-/// policy explicitly allows SNS delivery so real AWS forwards messages without
-/// manual console setup. Registered before <see cref="SqsConsumerHostedService"/>
-/// so queue URL is populated before polling begins.
-/// </summary>
 public sealed class BrokerProvisioner(
     IAmazonSimpleNotificationService sns,
     IAmazonSQS sqs,
@@ -32,9 +25,12 @@ public sealed class BrokerProvisioner(
         broker.QueueUrl = await EnsureQueueAsync(broker.TopicArn, queueName, ct);
         await EnsureSubscriptionAsync(broker.TopicArn, broker.QueueUrl, ct);
 
+        var dlqName = options.DlqName ?? "notification-service-event-created-dlq";
+        (broker.DlqUrl, broker.DlqArn) = await EnsureDlqAsync(dlqName, ct);
+
         logger.LogInformation(
-            "AWS messaging provisioned: SNS {Topic}, SQS {Queue} (raw subscription)",
-            broker.TopicArn, broker.QueueUrl);
+            "AWS messaging provisioned: SNS {Topic}, SQS {Queue} (raw subscription), DLQ {DlqUrl} (retention 14 days)",
+            broker.TopicArn, broker.QueueUrl, broker.DlqUrl);
     }
 
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
@@ -107,11 +103,30 @@ public sealed class BrokerProvisioner(
         }, ct);
     }
 
-    /// <summary>
-    /// Grants SNS the right to deliver into the queue. SQS <c>SendMessage</c>
-    /// permissions cannot be granted on the subscription alone; without this
-    /// policy real AWS silently drops deliveries.
-    /// </summary>
+    private async Task<(string Url, string Arn)> EnsureDlqAsync(string dlqName, CancellationToken ct)
+    {
+        string dlqUrl;
+        try
+        {
+            var url = await sqs.GetQueueUrlAsync(dlqName, ct);
+            dlqUrl = url.QueueUrl;
+        }
+        catch (QueueDoesNotExistException)
+        {
+            var created = await sqs.CreateQueueAsync(new CreateQueueRequest { QueueName = dlqName }, ct);
+            dlqUrl = created.QueueUrl;
+        }
+
+        var dlqArn = await QueueArnAsync(dlqUrl, ct);
+        await sqs.SetQueueAttributesAsync(dlqUrl, new Dictionary<string, string>
+        {
+            [QueueAttributeName.MessageRetentionPeriod] = "1209600",
+        }, ct);
+
+        logger.LogDebug("DLQ ready: {DlqUrl} (retention 1209600s, no redrive policy)", dlqUrl);
+        return (dlqUrl, dlqArn);
+    }
+
     private static string QueuePolicyJson(string topicArn, string queueArn)
     {
         var policy = new
@@ -132,7 +147,6 @@ public sealed class BrokerProvisioner(
             },
         };
 
-        // 'aws:SourceArn' uses a lowercase key in real JSON.
         var json = System.Text.Json.JsonSerializer.Serialize(policy);
         return json.Replace("aws_SourceArn", "aws:SourceArn", StringComparison.Ordinal);
     }

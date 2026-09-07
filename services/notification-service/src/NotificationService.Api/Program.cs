@@ -40,7 +40,6 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
     var httpContextAccessor = services.GetRequiredService<IHttpContextAccessor>();
     loggerConfiguration.Enrich.With(new CorrelationIdEnricher(httpContextAccessor));
 
-    // Never serialize AWS credentials into logs (US2).
     var secrets = new[] { context.Configuration["Aws:AccessKey"], context.Configuration["Aws:SecretKey"] }
         .Where(s => !string.IsNullOrWhiteSpace(s))
         .Select(s => s!)
@@ -134,10 +133,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.FromSeconds(30),
         };
 
-        // Override the issuer used for validation when Keycloak is reached
-        // through a different URL than the one used to mint tokens (e.g.
-        // tokens minted via host "localhost:8080" while the service fetches
-        // JWKS via "host.docker.internal:8080"). Defaults to the authority.
         var oidcIssuer = builder.Configuration["Oidc:Issuer"];
         if (!string.IsNullOrWhiteSpace(oidcIssuer))
         {
@@ -160,9 +155,6 @@ builder.Services.AddHostedService<CloudWatchRetentionService>();
 
 var app = builder.Build();
 
-// Feature 003: create/migrate the service schema and apply one-shot reference
-// seed on first start (guarded by Seed:Path; idle on later restarts). Fail-fast:
-// any migration/seed error halts startup before the app can serve traffic.
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<NotificationDatabaseSeeder>();
@@ -201,11 +193,6 @@ app.Run();
 
 public sealed partial class Program
 {
-    /// <summary>
-    /// Builds the CloudWatch Logs client with the same static credentials used by
-    /// the SNS/SQS clients whenever configured; otherwise falls back to the default
-    /// credential chain (provisioned role).
-    /// </summary>
     private static AmazonCloudWatchLogsClient CreateCloudWatchClient(
         IConfiguration configuration, string region)
     {

@@ -3,11 +3,6 @@ using FluentValidation;
 
 namespace EventService.Api.Middleware;
 
-/// <summary>
-/// Safe error handling (constitution Security Requirements): maps validation
-/// failures to <c>400 problem+json</c> and any unexpected exception to a
-/// sanitized <c>500</c> — no stack traces or internal details reach clients.
-/// </summary>
 public sealed class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)

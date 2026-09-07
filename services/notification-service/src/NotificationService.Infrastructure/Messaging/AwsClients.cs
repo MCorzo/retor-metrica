@@ -5,11 +5,6 @@ using Amazon.SQS;
 
 namespace NotificationService.Infrastructure.Messaging;
 
-/// <summary>
-/// Singleton CLI client factories for direct AWS SNS/SQS (US1). No ServiceURL
-/// is applied — always the real AWS regional endpoints. When static keys are
-/// empty the SDK falls back to the default credential chain (provisioned role).
-/// </summary>
 public static class AwsClients
 {
     public static IAmazonSimpleNotificationService CreateSns(AwsCredentialsOptions options)

@@ -9,13 +9,6 @@ using Microsoft.Extensions.Logging;
 
 namespace NotificationService.Infrastructure.Messaging;
 
-/// <summary>
-/// Long-polls the provisioned SQS queue (US1) and dispatches each
-/// <c>EventCreated</c> payload to <see cref="EventCreatedProcessor"/>. A message
-/// is deleted only after the notification record persists; SQS redelivery +
-/// the unique correlation index turn at-least-once into effectively-once.
-/// Unparseable bodies are logged and deleted as poison (no DLQ in MVP).
-/// </summary>
 public sealed class SqsConsumerHostedService(
     IServiceScopeFactory scopeFactory,
     IAmazonSQS sqs,
@@ -80,7 +73,7 @@ public sealed class SqsConsumerHostedService(
 
             using var scope = scopeFactory.CreateScope();
             var processor = scope.ServiceProvider.GetRequiredService<EventCreatedProcessor>();
-            await processor.HandleAsync(parsed, ct);
+            await processor.HandleAsync(parsed, message.Body, ct);
 
             await DeleteMessageAsync(queueUrl, message, ct);
         }

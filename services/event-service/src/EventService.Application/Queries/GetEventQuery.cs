@@ -22,7 +22,6 @@ public sealed class GetEventQueryHandler(
 
         if (!CanAccess(@event, request.Scope, request.OwnerId))
         {
-            // Do not leak existence across ownership boundaries (IDOR-safe).
             return null;
         }
 

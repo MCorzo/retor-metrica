@@ -4,10 +4,6 @@ using StackExchange.Redis;
 
 namespace EventService.Infrastructure.Caching;
 
-/// <summary>
-/// Polly v8 resilience policies for outbound dependencies (constitution
-/// Principle IV): retry with exponential backoff + jitter, bounded attempts.
-/// </summary>
 public static class ResiliencePolicies
 {
     public static ResiliencePipeline RedisListPipeline() =>

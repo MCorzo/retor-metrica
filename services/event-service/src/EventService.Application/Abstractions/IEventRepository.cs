@@ -9,7 +9,6 @@ public enum EventScope
     Client,
 }
 
-/// <summary>Persistence port for events/zones. Implemented by EventService.Infrastructure.</summary>
 public interface IEventRepository
 {
     Task AddAsync(Event entity, CancellationToken ct);
@@ -18,7 +17,6 @@ public interface IEventRepository
 
     Task<Event?> GetByIdWithZonesAsync(Guid id, CancellationToken ct);
 
-    /// <summary>Returns events filtered by role scope + optional query params (status, after, limit).</summary>
     Task<IReadOnlyList<Event>> QueryAsync(
         EventScope scope,
         Guid? ownerId,

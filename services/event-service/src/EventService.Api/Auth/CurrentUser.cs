@@ -2,10 +2,6 @@ using EventService.Application.Abstractions;
 
 namespace EventService.Api.Auth;
 
-/// <summary>
-/// Resolves the authenticated actor for audit fields and resource ownership
-/// (constitution: resource ownership / IDOR prevention).
-/// </summary>
 public sealed class CurrentUser(IHttpContextAccessor httpContextAccessor) : IAuditUserProvider
 {
     public Guid? SubjectId

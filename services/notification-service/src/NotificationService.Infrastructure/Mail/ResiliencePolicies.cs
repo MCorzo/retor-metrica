@@ -7,7 +7,6 @@ using Polly.Retry;
 
 namespace NotificationService.Infrastructure.Mail;
 
-/// <summary>Polly v8 resilience pipeline for outbound SMTP (constitution Principle IV).</summary>
 public static class ResiliencePolicies
 {
     public static ResiliencePipeline SmtpSendPipeline() =>

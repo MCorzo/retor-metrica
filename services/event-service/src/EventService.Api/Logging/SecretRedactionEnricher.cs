@@ -3,11 +3,6 @@ using Serilog.Events;
 
 namespace EventService.Api.Logging;
 
-/// <summary>
-/// Guarantees AWS credentials/secret values are never serialized into log
-/// events (US2): any property whose scalar value equals a configured secret is
-/// replaced with <c>[REDACTED]</c> at emission time.
-/// </summary>
 public sealed class SecretRedactionEnricher(IEnumerable<string> secrets) : ILogEventEnricher
 {
     private readonly HashSet<string> _secrets = new(

@@ -3,11 +3,6 @@ using EventService.Domain.Entities;
 
 namespace EventService.Application.Mapping;
 
-/// <summary>
-/// Hand-written projections from the aggregate to read DTOs. Mapping is kept
-/// explicit and dependency-free (replaces AutoMapper, which requires a
-/// commercial license since v15).
-/// </summary>
 public static class EventViews
 {
     public static ZoneDto ToZone(Zone zone) => new(zone.Id, zone.Name, zone.Price, zone.Capacity);

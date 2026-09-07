@@ -2,13 +2,6 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
 namespace EventService.Api.OpenApi;
-
-/// <summary>
-/// Declares the JWT Bearer security scheme in the OpenAPI document so the Scalar
-/// reference UI shows an "Authorize" button and presents every operation as
-/// protected (a required <c>Authorization</c> header). Without a declared
-/// scheme Scalar offers no way to attach the <c>Authorization</c> header at all.
-/// </summary>
 public sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransformer
 {
     public Task TransformAsync(

@@ -4,13 +4,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EventService.Infrastructure.SeedData;
 
-/// <summary>
-/// Startup seeder for the <c>events</c> schema. Runs EF <c>Migrate()</c>, then —
-/// only when the <c>events.seeds_applied</c> marker is absent — executes the
-/// versioned <c>*.sql</c> files in <see cref="SeedPathOptions.Path"/> in lexical
-/// order and records the marker. Both layers (marker + <c>ON CONFLICT</c> in the
-/// scripts) make the pass idempotent; operator data is never overwritten.
-/// </summary>
 public sealed class EventDatabaseSeeder
 {
     private const string MarkerTableSql =

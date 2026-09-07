@@ -5,13 +5,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EventService.Infrastructure.Messaging;
 
-/// <summary>
-/// Transactional outbox publisher (FR-006). Appends a <c>Pending</c>
-/// <see cref="OutboxMessage"/> to the caller's EF Core context — the row commits
-/// with the <c>events</c>/<c>zones</c> insert in the same <c>SaveChangesAsync</c>,
-/// and <see cref="OutboxRelay"/> ships it to SNS after commit. Never blocks or
-/// performs network I/O on the request path.
-/// </summary>
 public sealed class EventPublisher(
     EventDbContext db,
     AwsBrokerState broker,

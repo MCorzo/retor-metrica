@@ -3,13 +3,6 @@ using EventService.Domain.Auditing;
 
 namespace EventService.Infrastructure.Persistence;
 
-/// <summary>
-/// Application-owned transactional outbox row (data-model.md §events). Written
-/// in the same EF Core transaction as the <c>events</c>/<c>zones</c> insert
-/// (FR-006) and shipped to SNS by <see cref="Messaging.OutboxRelay"/>.
-/// Inherits <see cref="AuditableEntity"/> so the four mandatory audit columns
-/// are maintained by <c>AuditSaveChangesInterceptor</c>.
-/// </summary>
 public sealed class OutboxMessage : AuditableEntity
 {
     internal static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
