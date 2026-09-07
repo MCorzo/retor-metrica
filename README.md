@@ -1,20 +1,14 @@
 # Event Platform MVP
 
-El MVP realizado esta trabajado 
+El MVP realizado diseñado con una implementación hibrída en mente, utilizando tanto servicios en la nube de AWS como servicios on-premise sin embargo ya que esta realizado utlizando contenedores la migración a un entorno de ejecución totalmente en la nube se puede lograr sin demasiadas complicaciones.
 
-Los servicios desarrollados son los siguientes:
+Los servicios desarrollados en .net son los siguientes:
 
-- **EventService** — RESTful API to create events with zones (atomic
-  transaction), list events with role-based visibility served from a fast
-  Redis cache, and retrieve event detail. On creation it reliably publishes an
-  `EventCreated` event to AWS SNS through a transactional outbox + relay.
+- **EventService** — API RESTful para crear eventos con zonas (transacción atómica), listar eventos con visibilidad basada en roles servidos desde una caché Redis rápida y recuperar detalles del evento. Al crearse, publica de forma fiable un evento `EventCreated` en AWS SNS.
 
-- **NotificationService** — consumes `EventCreated` from a subscribed AWS SQS
-  queue, persists a durable notification record, and sends a single simple-text
-  email to the Admin via MailKit (MailHog in dev). Exactly-once dedup by
-  correlation id; SMTP failures are recorded and retried.
+- **NotificationService** — Consume `EventCreated` de una cola AWS SQS suscrita,mantiene un registro de notificación persistente y envía un único correo electrónico de texto simple al administrador a través de MailKit (MailHog en desarrollo). Los fallos de SMTP se registran y se reintentan una cantidad determinada de veces antes de pasar el evento a una DLQ.
 
-## Arquitectura
+## Estructura Proyecto
 
 ```text
 services/
@@ -33,94 +27,100 @@ services/
 └── common/              # Shared event contracts (EventPlatform.Contracts)
 ```
 
+## PreRequisitos
 
-## Pre Requisitos
+Para el entorno de desarrollo se necesita el siguiente software:
 
 - Visual Studio 2026
 - .NET 10 SDK
 - Docker
 
-> **Nota**: Si bien el proyecto fue desarrollado con Visual Studio 2026 Comunnity se entrega con los archivos necesarios (dockerfiles y docker-compose.yml) para poder levantar el proyecto utilizando unicamente la mediante consola.
+Adicionalmente se necesita tener una cuenta AWS para poder utilizar los servicios correspondientes, en este caso para simplificar el desarrollo se opto por un usuario IAM con las politicas de permisos tal como se muestra en la siguiente imagen:
 
-## Start the backend stack
+![IAM user - permissions policies ](img/iam_user_policies.png)
+
+> [!WARNING]
+> Si bien para entornos productivos existen mejores formas de gestionar permisos se decidio asignar permisos generales sobre los servicios requeridos para mantener la simplicidad de las configuraciones y debido al poco tiempo con el que se contaba.
+
+## Ejecutar el proyecto
+
+Para ejecutar el proyecto se debera seguir los siguientes pasos:
+
+1. Desde la consola navegar hasta la carpeta src/ y ejecutar los siguientes comandos:
 
 ```powershell
+# copiar el archivo .env de ejemplo
 Copy-Item .env.example .env
+
+# completar las variables del archivo .env recien creado y luego ejecutar el siguiente comando
 docker compose up -d --build
 ```
 
-| Container | Port | Purpose |
-|-----------|------|---------|
-| `postgres` | 5432 | Both services' transactional stores (schemas `events`, `notifications`) |
-| `redis` | 6379 | ElastiCache-compatible cache (dev stand-in) |
-| `mailhog` | 8025 / 1025 | SMTP sink for email (UI at http://localhost:8025) |
-| `keycloak` | 8080 | OIDC IdP for dev tokens |
+> ### **Nota** :
+>
+> Dentro de lo posible se trato de poner valores por defecto a la mayoria de varaible de entorno para facilitar al usuario el levantar el proyecto y no sea necesario configurar todas, sin embargo, las variables AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY y AWS_REGION son de caracter obligatorio y deberan con valores reales.
 
-The SNS topic, SQS queue, and SNS→SQS subscription are auto-provisioned against
-**real AWS** at startup. Credentials are injected from the
-git-ignored `.env` via `Sns__*`/`CloudWatch__*` environment variables — see
-`specs/002-aws-sns-migration/contracts/aws-environment-variables.md`.
+Una vez ejecutado los comandos antes indicados se crearan los siguientes servicios
 
-## Run the services
+| Servicio                  | Puerto(s)   | Descripción                                                                                                                                                                                     |
+| ------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `postgres-events`         | 5432        | Base de datos del api eventos                                                                                                                                                                   |
+| `postgres-notifications`  | 5433        | Base de datos del api notificaciones                                                                                                                                                            |
+| `redis`                   | 6379        | ElastiCache-compatible cache                                                                                                                                                                    |
+| `mailhog`                 | 8025 / 1025 | Servicio SMTP para notificación mediante correos, para consultar los correos de notificación ingresar al siguiente [link](http://localhost:1080)                                                |
+| `keycloak`                | 8080        | OIDC IdP, [Dashboard Administracion](http://localhost:8080)                                                                                                                                     |
+| `eventservice.api`        | 8080        | Api RESTful de servicio de eventos, para facilitar el proceso de pruebas se habilito Scalar UI al cual se puede acceder desde el siguiente enlace [link](http://localhost:1080/scalar)          |
+| `notificationservice.api` | 8080        | Api RESTful de servicio de notificaciones, , para facilitar el proceso de pruebas se habilito Scalar UI al cual se puede acceder desde el siguiente enlace [link](http://localhost:1081/scalar) |
 
-```powershell
-dotnet run --project services/event-service/src/EventService.Api          # http://localhost:5000
-dotnet run --project services/notification-service/src/NotificationService.Api  # http://localhost:5100
-```
+2. A continuación ingresar al "Dashboard Administración" de keycloack para validar que el servicio esta ejecutando correctamente utilizando las siguiente credenciales:
 
-On startup both services apply EF Core migrations; the BrokerProvisioner
-creates the SNS topic/queue/subscription and the outbox relay ships `Pending`
-outbox rows to SNS. Dev OIDC tokens always come from the Keycloak realm started
-by `docker compose`.
+<table>
+<tr>
+<td>Usuario</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>admin</td>
+</tr>
+</table>
 
-- API docs (Scalar): http://localhost:5000/scalar/v1 and
-  http://localhost:5100/scalar/v1
-- Health checks: `http://localhost:5000/health/live` + `/health/ready`
-  (readiness validates Postgres, Redis, SNS).
 
-## Verify the loop (smoke)
+3. Una vez validado que el servicio de keycloack esta ejecutando correctamente ejecutar los siguiente comandos de acuerdo a para obtener el token del usuario con el cual podremos utilizar los servicio api.
 
-1. Create an event:
-
-   ```powershell
-   $body = @{
-     name  = "Summer Fest 2026"; date = "2026-07-25T22:00:00Z"
-     venue = "Parque Norte, Madrid"; status = "published"
-     zones = @(@{name="General"; price=25.00; capacity=500}, @{name="VIP"; price=90.00; capacity=100})
-   } | ConvertTo-Json -Depth 4
-   Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/v1/events `
-     -Headers @{Authorization="Bearer $token"} -ContentType application/json -Body $body
-   ```
-
-2. Poll the notification record: `GET http://localhost:5100/api/v1/notifications`
-   → one `Pending` record, then `Sent` within ~60 s.
-3. Email visible in the MailHog UI at http://localhost:8025.
-4. Duplicate/failure/broker-down and cache behavior checks are in
-   `quickstart.md` (§5–6).
-
-## Build
+Para Windows:
 
 ```powershell
-dotnet build EventPlatform.slnx   # 0 warnings / 0 errors expected
-dotnet format EventPlatform.slnx  # enforced formatting
+Invoke-RestMethod -Uri "http://localhost:8080/realms/master/protocol/openid-connect/token" `
+  -Method Post `
+  -ContentType "application/x-www-form-urlencoded" `
+  -Body @{
+    grant_type = "password"
+    client_id  = "event-platform"
+    username   = "admin"
+    password   = "admin"
+  } | ConvertTo-Json -Depth 10
 ```
 
-## Development config quick reference
+Para Linux/Unix:
 
-| Setting | Default (dev) | Purpose |
-|---------|---------------|---------|
-| `ConnectionStrings:Default` | `Host=localhost;Port=5432;Database=eventplatform;Username=eventplatform;Password=eventplatform` | PostgreSQL |
-| `Redis:Connection` | `localhost:6379` | Cache |
-| `Sns:TopicName` | `event-created` | SNS topic auto-created at startup |
-| `Sns:QueueName` | `notification-service-event-created` | SQS queue auto-created + subscribed (NotificationService) |
-| `Sns:DlqName` | `notification-service-event-created-dlq` | SQS DLQ for terminal email failures, auto-provisioned with 14-day retention |
-| `Email:MaxTransientAttempts` | `5` | Transient SMTP retry cap before a notification is routed to the DLQ |
-| `Aws:Region` | `us-east-1` | AWS region (SNS/SQS/CloudWatch) |
-| `Aws:AccessKey` / `Aws:SecretKey` | empty | AWS static credentials (from env, never committed) |
-| `CloudWatch:Enabled` | `false` (appsettings) → `true` (compose) | Ship structured logs to AWS CloudWatch (30-day retention) |
-| `Smtp:Host/Port` | `localhost:1025` (MailHog) | SMTP (no auth in dev; StartTLS in prod) |
-| `Oidc:Authority` | `http://localhost:8080/realms/event-platform` | JWT issuer (dev) |
-| `Oidc:Audience` | `event-platform` | JWT audience |
+```bash
+curl -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
+  -d "grant_type=password" \
+  -d "client_id=event-platform" \
+  -d "username=admin" \
+  -d "password=admin"
+```
 
-Production secrets come from environment variables or user-secrets, never from
-committed files (constitution security rules).
+Una vez ejecutado el comando debemos recuperar el valor del campo "access_token" del json que se nos muestra en pantalla, con el podremos ir la interfaz de ScalarUI de cualquiera de los api desarrollados y en la sección "Introduction" configurar el valor correspondiente al Bearer Token tal como se muestra en la imagen, para utilizarlo posteriormente en las peticiones que realicemos a los distintos apis del proyecto.
+
+![ScalarUI Configuración](img/config_bearer_token.png)
+
+Cabe recordar que la configuración del bearer token de manera individual por cada servicio en la interfaz de Scalar, en caso se utilicen otras herramientas como Postman o directamente desde la consola el Bearer se debera enviar mediante el Header Authorization en la petición.
+
+> ### **Nota** :
+>
+> En este caso se ha omitido los pasos para la migración y carga de datos iniciales debido a que se realizo el desarrollo de tal manera que tanto las migraciones como la carga de datos se realiza de manera automática al crear el contenedor y siempre validando que solo se ejecuten una vez, este mecanismo no esta pensado para cargar diferentes scripts de carga inicial aunque modificar el proyecto para lograrlo no deberia ser complicado.
+
+
+
