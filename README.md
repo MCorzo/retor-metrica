@@ -112,7 +112,7 @@ curl -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
   -d "password=admin"
 ```
 
-Una vez ejecutado el comando debemos recuperar el valor del campo "access_token" del json que se nos muestra en pantalla, con el podremos ir la interfaz de ScalarUI de cualquiera de los api desarrollados y en la sección "Introduction" configurar el valor correspondiente al Bearer Token tal como se muestra en la imagen, para utilizarlo posteriormente en las peticiones que realicemos a los distintos apis del proyecto.
+4. Una vez ejecutado el comando debemos recuperar el valor del campo "access_token" del json que se nos muestra en pantalla, con el podremos ir la interfaz de ScalarUI de cualquiera de los api desarrollados y en la sección "Introduction" configurar el valor correspondiente al Bearer Token tal como se muestra en la imagen, para utilizarlo posteriormente en las peticiones que realicemos a los distintos apis del proyecto.
 
 ![ScalarUI Configuración](img/config_bearer_token.png)
 
